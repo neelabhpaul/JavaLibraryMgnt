@@ -1,19 +1,22 @@
-import java.util.*; 
+import java.util.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;  // Import the File class
 import java.io.FileWriter; 
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;  // Import the IOException class to handle errors
 import java.util.Scanner;
 import java.text.SimpleDateFormat;
 
-public class student 
+public class student extends bookRecord
 {
-	private String info = "";
-	private List<String> dataList = new ArrayList<String>();
-	private String dueDate = "";
-	private String issueDate = "";
+	public static String info = "";
+	public static List<String> dataList = new ArrayList<String>();
+	public static String dueDate = null;
+	public static String issueDate = null;
 	
-	public String dueDateCalc(String date)
+	public static String dueDateCalc(String date)
 		throws Exception {
 		issueDate = date;  // Start date | of format "02-01-2021"
 		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
@@ -24,7 +27,9 @@ public class student
 		
 		return new_date;
 		}
-	void getval(String a, String b, String c)
+	
+	
+	public static boolean getval(String a, String b, String c)
 		throws Exception{
 		dueDate = dueDateCalc(c);
 		info = a + ", " + b + ", " + c + ", " + dueDate + "\n";
@@ -46,7 +51,6 @@ public class student
 	      catch (IOException e)
 		{
           System.out.println("An error occurred.");
-          //e.printStackTrace();
 	    }
 		
 	        
@@ -54,104 +58,95 @@ public class student
         
         try
         {
-        	FileWriter myWriter = new FileWriter("student_data.txt");
-		    myWriter.write(info);
-		    myWriter.close();
-		    System.out.println("Successfully wrote to the file.");
+        	
+        	File bookRecFile = new File("book_inventory.txt");
+            FileReader fr = new FileReader(bookRecFile);
+            BufferedReader br = new BufferedReader(fr);
+            Scanner ScannerFile = new Scanner(bookRecFile);
+            String line = "";
+            while (ScannerFile.hasNextLine()){
+        		line = line + "\n" + ScannerFile.nextLine();}
+        	ScannerFile.close();
+        	if (line.contains(b)){
+                	FileWriter myWriter = new FileWriter("student_data.txt", true);
+	    		    myWriter.write(info);
+	    		    myWriter.close();
+	    		    System.out.println("Successfully wrote to the file.");
+	    		    fr.close();
+	    		    br.close();
+	    		    return true;}
+	            
+        	else {
+        	System.out.println("Book not available");
+        	fr.close();
+        	br.close();
+        	return false;}
+        
+            
         }
         catch (IOException e) 
         {
             System.out.println("An error occurred.");
-            //e.printStackTrace();
         }
         
         dataList.clear();
+        return true;
     }
 	      
-	void show()
+	public static String show()
 	{
-	
+		String data = "Student Id, Book Id, Issue date, Due date\n";
 		    try {
 		      File studentFile = new File("student_data.txt");
 		      Scanner studentReader = new Scanner(studentFile);
 		      while (studentReader.hasNextLine())
 		      {
-		        String data = studentReader.nextLine();
-		        System.out.println(data);
+		        data = data + "\n" + studentReader.nextLine();
 		      }
+		      
 		      studentReader.close();
 		    } 
 		    catch (FileNotFoundException e) 
 		    {
 		      System.out.println("An error occurred.");
-		      //e.printStackTrace();
 		    }
+		   return data;
 		    
 	}
 
-	void submit(String entry)
+	public static void submit(String prn)
 	{
-		File studentFile = new File("student_data.txt");
-		if (!studentFile.isFile()) {
-	        System.out.println("Parameter is not an existing file");
-	        return;
-		}
-		
-		File tempFile = new File("temp.txt");
-		try
-		{
-			  if (tempFile.createNewFile())
-			  {
-			    System.out.println("File created: " + tempFile.getName());
-			  } 
-			  else 
-			  {
-			    System.out.println("File already exists.");
-			  }
-		}
-	      catch (IOException e)
-		{
-          System.out.println("An error occurred.");
-          //e.printStackTrace();
-	    }
-		
-		
-		Scanner scanFile = new Scanner("student_data.txt");
-		try 
-		{	FileWriter bufferWriter = new FileWriter("temp.txt");
-			while (scanFile.hasNextLine())
-		      {
-				if (scanFile.nextLine()!=entry) {
-		        String data = scanFile.nextLine();
-		        bufferWriter.write(data);
-				}
-		      }
-			bufferWriter.close();
-		}
-		
-		catch (IOException e)
-		{
-			System.out.println("An error occured");
-		}
-		scanFile.close();
-		
-		//File studentFile =new File("student_data.txt");
-        File temp = new File("temp.txt");
+		List<String> lines = new ArrayList<String>();
+	    String line = null;
+	    String admissionID = null;
+	    
+		try {
+	        //System.out.println("Enter PRN: ");
+	        admissionID = prn;
+            File studentFile = new File("student_data.txt");
+            FileReader fr = new FileReader(studentFile);
+            BufferedReader br = new BufferedReader(fr);
+            while ((line = br.readLine()) != null) {
+                if (line.contains(admissionID))
+                	line = " ";
+                	lines.add(line);
+            }
+            System.out.println("Book has been submitted");
+            fr.close();
+            br.close();
 
-        if(temp.renameTo(studentFile)){
-            System.out.println("File renamed");
-        }else{
-            System.out.println("Sorry! the file can't be renamed");
+            FileWriter fw = new FileWriter(studentFile);
+            BufferedWriter out = new BufferedWriter(fw);
+            for(String s : lines)
+                 out.write(s+"\n");
+            out.flush();
+            out.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
-	}
+    }
 
-	
-	public static void main(String[] args) throws Exception
-	{
-		student Neelabh = new student();
-		// getval(PRN, Book Id, Issue date)
-		Neelabh.getval("084", "14819", "08-04-2021");
-		
-	}
 	
 }
+	
+
